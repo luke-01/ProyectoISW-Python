@@ -35,14 +35,21 @@ def obtener_proyecto_por_id(id_proyecto: int, db: Session = Depends(getDB)):
 
 @app.post("/proyectos", response_model=schemas.Proyecto)
 def crear_proyecto(item: schemas.CrearProyecto, db: Session = Depends(getDB)):
-    return ctrl.createProyecto(item, db)
+    proyecto = ctrl.createProyecto(item, db)
+    if proyecto is None:
+        raise HTTPException(status_code=400, detail="Maker asociado no existe")
+    else:
+        return proyecto
 
 
 @app.put("/proyectos/{id_proyecto}", response_model=schemas.Proyecto)
 def actualizar_proyecto(id_proyecto: int, item: schemas.ActualizarProyecto, db: Session = Depends(getDB)):
-    proyecto = ctrl.updateProyecto(id_proyecto, item, db)
+    proyecto, status = ctrl.updateProyecto(id_proyecto, item, db)
     if proyecto is None:
-        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+        if status == 1:
+            raise HTTPException(status_code=400, detail="Maker asociado no existe")
+        elif status == 2:
+            raise HTTPException(status_code=404, detail="Proyecto no encontrado")
     return proyecto
 
 

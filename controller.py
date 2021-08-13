@@ -1,6 +1,10 @@
 from sqlalchemy.orm import Session
 import models
 import schemas
+import requests
+
+
+user_endpoint = "http://ec2-3-13-79-51.us-east-2.compute.amazonaws.com:8081"
 
 
 def getProyectos(db: Session):
@@ -12,6 +16,9 @@ def getProyecto(id_proyecto: int, db: Session):
 
 
 def createProyecto(item: schemas.CrearProyecto, db: Session):
+    maker = requests.get(f"{user_endpoint}/persona/{item.id_maker}")
+    if "message" in maker.json():
+        return None
     proyecto = models.Proyecto(nombre=item.nombre,
                                descripcion=item.descripcion,
                                id_maker=item.id_maker)
@@ -22,9 +29,12 @@ def createProyecto(item: schemas.CrearProyecto, db: Session):
 
 
 def updateProyecto(id_proyecto: int, item: schemas.ActualizarProyecto, db: Session):
+    maker = requests.get(f"{user_endpoint}/persona/{item.id_maker}")
+    if "message" in maker.json():
+        return (None, 1)
     proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == id_proyecto).first()
     if proyecto is None:
-        return None
+        return (None, 2)
     proyecto.nombre = item.nombre
     proyecto.descripcion = item.descripcion
     proyecto.id_maker = item.id_maker
